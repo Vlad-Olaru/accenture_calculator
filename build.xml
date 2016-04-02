@@ -1,0 +1,102 @@
+<project name="" basedir="." default="localFullBuildAndDeploy" xmlns:jacoco="antlib:org.jacoco.ant">
+	<property file="${basedir}/filters/development_filter.properties" />
+
+	<path id="classes">
+		<fileset dir="WebContent/WEB-INF/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<pathelement location="WebContent/WEB-INF/classes" />
+	</path>
+
+	<target name="setupDevelopment">
+		<filter filtersfile="filters/development_filter.properties" />
+	</target>
+
+	
+	<target name="clean" depends="setupDevelopment">
+		<delete file="${deploy.dir}/${project.distname}.war" />
+		<delete dir="${deploy.dir}/${project.distname}" />
+		<delete dir="${tomcat.home}/work/Standalone/localhost" />
+	</target>
+
+	<target name="deploy" depends="build">
+		<echo>DEPLOYING...</echo>			
+		<copy file="dist/${project.distname}.war" todir="${deploy.dir}" overwrite="true" />
+	</target>
+	
+	<target name="compile">
+		<echo>COMPILING...</echo>
+	    <javac srcdir="${src.dir}" destdir="${result.classes.dir}" debug="on" debuglevel="lines,vars,source">
+	    	<classpath refid="classes"/>
+	    </javac>
+		<javac srcdir="${test.dir}" destdir="${result.classes.dir}" debug="on" debuglevel="lines,vars,source" failonerror="false">
+			<classpath refid="classes"/>
+		</javac>
+	</target>
+	
+	<target name="build" depends="compile">
+		<echo>BUILDING THE WAR...</echo>
+		<war basedir="${webroot.dir}" warfile="${dist.dir}/${project.distname}.war" webxml="${webroot.dir}/WEB-INF/web.xml">
+			<exclude name="WEB-INF/web.xml" />
+			<exclude name="WEB-INF/lib/j2ee.jar" />
+		</war>
+		<copy file="dist/${project.distname}.war" todir="${deploy.dir}" overwrite="true" />
+	</target>
+	
+	<target name="test">
+		<testng classpathref="classes" outputDir="test-output" haltOnfailure="true">
+			<xmlfileset dir="resources" includes="testng.xml" />
+		</testng>
+	</target>
+		
+	<target name="localBuild" depends="compile,test">
+		<echo>BUILDING THE WAR...</echo>
+		<war basedir="${webroot.dir}" warfile="${dist.dir}/${project.distname}.war" webxml="${webroot.dir}/WEB-INF/web.xml">
+			<exclude name="WEB-INF/web.xml" />
+			<exclude name="WEB-INF/lib/j2ee.jar" />
+		</war>
+	</target>
+	
+	<target name="localFullBuildAndDeploy" depends="localBuild,clean,deploy">
+	</target>
+
+	<taskdef name="testng" classname="org.testng.TestNGAntTask" classpathref="classes" />
+	<taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml" classpathref="classes" />
+
+		<target name="test_jacoco" >
+			<!-- Step 2: Wrap test execution with the JaCoCo coverage task -->
+			<jacoco:coverage destfile="${result.exec.file}" >
+				<testng classpathref="classes" outputDir="test-output" haltOnfailure="false">
+							<xmlfileset dir="resources" includes="testng.xml" />
+						</testng>
+			</jacoco:coverage>
+		</target>
+
+		<target name="report" depends="test_jacoco">
+			<!-- Step 3: Create coverage report ..... -->
+			<jacoco:report>
+
+				<!-- This task needs the collected execution data and ... -->
+				<executiondata>
+					<file file="${result.exec.file}" />
+				</executiondata>
+
+				<!-- the class files and optional source files ... -->
+				<structure name="Calculator">
+					<classfiles>
+						<fileset dir="${result.classes.dir}" />
+					</classfiles>
+					<sourcefiles encoding="UTF-8">
+						<fileset dir="${src.dir}" />
+					</sourcefiles>
+				</structure>
+
+				<!-- to produce reports in different formats. -->
+				<html destdir="${result.report.dir}" />
+				<csv destfile="${result.report.dir}/report.csv" />
+				<xml destfile="${result.report.dir}/report.xml" />
+			</jacoco:report>
+		</target>
+
+
+</project>

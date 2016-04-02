@@ -1,0 +1,24 @@
+sonar.projectKey=continuous.integration.calc
+sonar.projectName=Calculator
+sonar.projectVersion=1.0
+sonar.sources=src
+sonar.language=java 
+sonar.scm.disabled=true
+
+# Tests
+sonar.dynamicAnalysis=reuseReports
+sonar.java.coveragePlugin=jacoco
+sonar.junit.reportsPath=test-output/junitreports
+#sonar.surefire.reportsPath=test-output/surefire-reports
+sonar.java.binaries=WebContent/WEB-INF/classes
+sonar.java.libs=WebContent/WEB-INF/lib
+sonar.tests=test
+
+sonar.jacoco.reportPath=test-output/result.exec
+sonar.jacoco.itReportPath=test-output/result_it.exec
+
+# Debug
+#sonar.verbose=false
+
+
+
